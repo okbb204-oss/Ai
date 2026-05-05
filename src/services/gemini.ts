@@ -49,16 +49,31 @@ export const geminiService = {
     const craft = CRAFTS.find(c => c.id === craftId);
     const targetLang = lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English';
     const prompt = `
-      Generate Level ${level} lesson for ${craft?.name}. 
+      Act as a Senior Vocational Instructor. Generate a professional Lesson for Level ${level}/20 of a ${craft?.name} course.
       Target Language: ${targetLang}
-      The lesson should be professional and practical.
-      Each lesson MUST have:
-      1. title: Professional title.
-      2. content: Clear explanation related to real work (in target language, markdown).
-      3. quiz: 5 MCQs.
-         - Options: 4 answers.
-         - correctIndex: 0-3.
-         - explanation: Why its correct.
+
+      The lesson MUST follow this pedagogical structure:
+      1. Technical Concept: Professional explanation of the skill.
+      2. Importance: Why this matters in the real workspace.
+      3. REAL-WORLD SCENARIO: A specific situation (e.g., "You are at a workshop and...") that requires applying this skill.
+      4. Practical Steps: How to execute the task professionally.
+
+      Return a JSON object:
+      {
+        "title": "Professional Title (Level ${level})",
+        "content": "Markdown content including the sections above. Use headings and bullet points. Focus on PRACTICALITY.",
+        "quiz": [
+          {
+            "id": 1,
+            "text": "Practical question based on the scenario or technical content",
+            "options": ["Realistic Answer A", "Realistic Answer B", "Realistic Answer C", "Realistic Answer D"],
+            "correctIndex": 0,
+            "explanation": "Professional explanation of why this answer is the standard industry practice."
+          }
+        ] (generate exactly 5 questions)
+      }
+      
+      Pedagogy: Practical > Theoretical. Real situations > Abstract ideas.
     `;
 
     const response = await ai.models.generateContent({
@@ -76,10 +91,10 @@ export const geminiService = {
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  id: { type: Type.INTEGER },
+                  id: { type: Type.NUMBER },
                   text: { type: Type.STRING },
                   options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  correctIndex: { type: Type.INTEGER },
+                  correctIndex: { type: Type.NUMBER },
                   explanation: { type: Type.STRING }
                 },
                 required: ["id", "text", "options", "correctIndex", "explanation"]
@@ -99,10 +114,22 @@ export const geminiService = {
     const craft = CRAFTS.find(c => c.id === craftId);
     const targetLang = lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English';
     const prompt = `
-      Analyze these quiz scores for ${craft?.name}.
-      Scores: ${JSON.stringify(scores)}
+      As a Vocational Certification Expert, analyze these test scores for the ${craft?.name} curriculum.
+      Scores (out of 5 per level): ${JSON.stringify(scores)}
+      Number of levels completed: ${scores.length}
+      
       Target Language: ${targetLang}
-      Generate a professional vocational report (in target language).
+      
+      Generate a Final Competency Report in JSON:
+      {
+        "strengths": ["Clear vocational strength 1", "Clear vocational strength 2"],
+        "weaknesses": ["Specific technical gap 1", "Specific technical gap 2"],
+        "skillLevel": "Entry | Practitioner | Specialist",
+        "readiness": 0-100 (Integer, estimate based on scores),
+        "nextSteps": ["Actionable professional step 1", "Career path advice", "Required mentorship/practice"]
+      }
+      
+      Focus on professional readiness and practical skill assessment.
     `;
 
     const response = await ai.models.generateContent({

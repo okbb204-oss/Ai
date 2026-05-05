@@ -19,6 +19,10 @@ export interface Craft {
   tools: string[];
   opportunities: string[];
   level: CraftLevel;
+  salary: string;
+  duration: string;
+  skills: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 export interface UserProfile {
