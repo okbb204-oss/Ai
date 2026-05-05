@@ -346,7 +346,7 @@ export default function App() {
                     const Icon = ICON_MAP[c.icon];
                     return (
                       <div key={c.id} className="flex flex-col items-center gap-3">
-                        <Icon size={40} className="dark:text-white" />
+                        {Icon && <Icon size={40} className="dark:text-white" />}
                         <span className="text-[10px] font-black uppercase tracking-widest dark:text-white">
                           {lang === 'ar' ? c.nameAr : lang === 'fr' ? c.nameFr : c.name}
                         </span>
@@ -640,7 +640,7 @@ function Dashboard({ profile, analysis, onSelectCraft, completedLevels, lang, t 
                   onClick={() => onSelectCraft(craft)}
                 >
                   <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Icon size={120} />
+                    {Icon && <Icon size={120} />}
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white font-black text-xl mb-8">
                     {index + 1}
@@ -689,7 +689,7 @@ function Dashboard({ profile, analysis, onSelectCraft, completedLevels, lang, t 
                     )}
                   >
                     <div className="p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 group-hover:bg-primary-600 group-hover:text-white transition-all w-fit mb-8 shadow-sm">
-                      <Icon size={28} />
+                      {Icon && <Icon size={28} />}
                     </div>
                     <h3 className="text-xl font-black mb-2 dark:text-white group-hover:text-primary-600 transition-colors">{getCraftName(craft)}</h3>
                     <div className="flex items-center justify-between mt-auto pt-6 border-t border-neutral-50 dark:border-neutral-800">
