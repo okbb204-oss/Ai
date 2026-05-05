@@ -3,29 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export type Language = 'ar' | 'en' | 'fr';
+
+export type CraftLevel = 'primary' | 'secondary' | 'higher';
+
 export interface Craft {
   id: string;
   name: string;
   nameAr: string;
+  nameFr: string;
   description: string;
+  descriptionAr: string;
+  descriptionFr: string;
   icon: string;
   tools: string[];
   opportunities: string[];
+  level: CraftLevel;
 }
 
 export interface UserProfile {
   age: number;
-  education: string;
+  education: 'primary' | 'secondary' | 'university';
   interests: string[];
   workStyle: 'manual' | 'technical' | 'creative';
   experience: 'beginner' | 'intermediate' | 'advanced';
+  language: Language;
 }
 
 export interface Lesson {
   id: number;
   level: number;
   title: string;
-  titleAr: string;
   content: string;
   quiz: Question[];
 }

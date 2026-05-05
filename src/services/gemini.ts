@@ -4,26 +4,29 @@
  */
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserProfile, AnalysisResult, Lesson, FinalReport } from "../types";
+import { UserProfile, AnalysisResult, Lesson, FinalReport, Language } from "../types";
 import { CRAFTS } from "../constants";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const geminiService = {
   async analyzeUser(profile: UserProfile): Promise<AnalysisResult> {
+    const lang = profile.language;
     const prompt = `
       As a vocational guidance expert, analyze this user profile and suggest the most suitable crafts from our list.
       User Profile: ${JSON.stringify(profile)}
-      Available Crafts: ${JSON.stringify(CRAFTS.map(c => ({ id: c.id, name: c.name, nameAr: c.nameAr })))}
+      Available Crafts: ${JSON.stringify(CRAFTS.map(c => ({ id: c.id, name: c.name, nameAr: c.nameAr, level: c.level })))}
+
+      Target Language: ${lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English'}
 
       Provide the result in JSON format with:
       1. suggestedCrafts: Array of IDs of all suitable crafts.
       2. top3: Top 3 craft IDs in order of preference.
-      3. explanations: An object mapping craft ID to a brief explanation (in Arabic) of WHY it fits the user.
+      3. explanations: An object mapping craft ID to a brief explanation (in the target language) of WHY it fits the user.
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -42,25 +45,24 @@ export const geminiService = {
     return JSON.parse(response.text);
   },
 
-  async getLesson(craftId: string, level: number): Promise<Lesson> {
+  async getLesson(craftId: string, level: number, lang: Language): Promise<Lesson> {
     const craft = CRAFTS.find(c => c.id === craftId);
+    const targetLang = lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English';
     const prompt = `
-      Generate Level ${level} lesson for ${craft?.name} (${craft?.nameAr}). 
-      The lesson should be professional, practical, and progressive in difficulty.
+      Generate Level ${level} lesson for ${craft?.name}. 
+      Target Language: ${targetLang}
+      The lesson should be professional and practical.
       Each lesson MUST have:
-      1. title: Professional title in English.
-      2. titleAr: Professional title in Arabic.
-      3. content: Clear explanation (professional + practical) related to real work (in Arabic, markdown format).
-      4. quiz: 5 unique multiple-choice questions related to this lesson. 
-         - Options: 4 realistic answers.
-         - correctIndex: Index of the correct answer (0-3).
-         - explanation: Brief explanation (in Arabic) why the answer is correct.
-
-      This is level ${level}/20. Ensure the difficulty matches the level.
+      1. title: Professional title.
+      2. content: Clear explanation related to real work (in target language, markdown).
+      3. quiz: 5 MCQs.
+         - Options: 4 answers.
+         - correctIndex: 0-3.
+         - explanation: Why its correct.
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview", // Complex reasoning needed for lesson structure
+      model: "gemini-2.0-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -68,7 +70,6 @@ export const geminiService = {
           type: Type.OBJECT,
           properties: {
             title: { type: Type.STRING },
-            titleAr: { type: Type.STRING },
             content: { type: Type.STRING },
             quiz: {
               type: Type.ARRAY,
@@ -85,35 +86,27 @@ export const geminiService = {
               }
             }
           },
-          required: ["title", "titleAr", "content", "quiz"]
+          required: ["title", "content", "quiz"]
         }
       }
     });
 
     const data = JSON.parse(response.text);
-    return {
-      id: Date.now(),
-      level,
-      ...data
-    };
+    return { id: Date.now(), level, ...data };
   },
 
-  async generateReport(craftId: string, scores: number[]): Promise<FinalReport> {
+  async generateReport(craftId: string, scores: number[], lang: Language): Promise<FinalReport> {
     const craft = CRAFTS.find(c => c.id === craftId);
+    const targetLang = lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English';
     const prompt = `
-      Analyze these quiz scores ([0-5] per lesson) for the ${craft?.name} course.
+      Analyze these quiz scores for ${craft?.name}.
       Scores: ${JSON.stringify(scores)}
-      
-      Generate a professional vocational report in Arabic:
-      1. strengths: List of 3-5 strengths.
-      2. weaknesses: List of 2-4 areas for improvement.
-      3. skillLevel: One of 'Beginner', 'Practitioner', 'Expert'.
-      4. readiness: Number from 0-100 indicating career readiness for this craft.
-      5. nextSteps: 3 professional recommendations for their career.
+      Target Language: ${targetLang}
+      Generate a professional vocational report (in target language).
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
