@@ -8,7 +8,3 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
-
-if (typeof (window as any).process === 'undefined') {
-  (window as any).process = { env: {} };
-}
